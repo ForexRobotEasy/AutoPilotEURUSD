@@ -1,0 +1,70 @@
+mql5
+// AutoPilotEURUSD - Trading Robot for EURUSD H1 timeframe
+// Developed by Forex Robot Easy Team (forexroboteasy.com)
+
+// Include necessary libraries and indicators
+#include <Trade\Trade.mqh>
+#include <MovingAverages.mqh>
+
+// Define input parameters
+input double StopLoss = 50; // Stop Loss level in pips
+input double TakeProfit = 100; // Take Profit level in pips
+
+// Define global variables
+CTrade trade; // Trade object for executing trades
+CMovingAverages ma; // Moving Averages object for trend identification
+
+// Define entry point function
+void OnTick()
+{
+    // Check if there is an open position
+    if (trade.PositionSelect(Symbol()))
+    {
+        // Check if the current position is profitable
+        if (trade.PositionProfit() >= TakeProfit)
+        {
+            // Close the position with Take Profit
+            trade.PositionClose(Symbol());
+        }
+        else if (trade.PositionProfit() <= -StopLoss)
+        {
+            // Close the position with Stop Loss
+            trade.PositionClose(Symbol());
+        }
+    }
+    else
+    {
+        // Check if there is a valid trend
+        if (ma.Trend() == TREND_UP)
+        {
+            // Open a buy position
+            trade.Buy(Symbol(), 1);
+            trade.PositionModify(Symbol(), StopLoss, TakeProfit);
+        }
+        else if (ma.Trend() == TREND_DOWN)
+        {
+            // Open a sell position
+            trade.Sell(Symbol(), 1);
+            trade.PositionModify(Symbol(), StopLoss, TakeProfit);
+        }
+    }
+}
+
+// Define initialization function
+void OnInit()
+{
+    // Set up Moving Averages parameters
+    ma.Period = 50;
+    ma.Method = MODE_SMA;
+
+    // Set up Trade parameters
+    trade.SetDeviationInPoints(10);
+}
+
+// Define deinitialization function
+void OnDeinit(const int reason)
+{
+    // Close any open positions
+    trade.PositionClose(Symbol());
+}
+
